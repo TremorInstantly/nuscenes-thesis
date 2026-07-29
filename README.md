@@ -13,6 +13,20 @@ The project will be developed incrementally, beginning with preprocessing, follo
 - configs/
 - data/
 - preprocessing/
+- models/
 - training/
 - outputs/
+- visualizations/
 - docs/
+
+
+## Development Roadmap
+
+1. Dataset preprocessing
+2. NPZ verification
+3. Baseline models
+4. Physics-guided interaction model
+5. Training pipeline
+6. Benchmarking
+7. Robustness analysis
+8. Visualization
