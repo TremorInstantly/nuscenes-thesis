@@ -4,14 +4,14 @@ This directory contains the preprocessing, training, evaluation, benchmarking, v
 
 The main workflow is executed in the following order:
 
-
+```text
 Preprocessing
      │
      ▼
 Training
      │
      ▼
-Benchmarking
+Benchmarking / Evaluation
      │
      ▼
 Training Plots
@@ -21,25 +21,27 @@ Trajectory Plots
      │
      ▼
 Perturbation Analysis
-
+```
 
 ## Main Pipeline Scripts
 
-### 1. preprocessing.py
+### 1. `preprocessing.py`
 
 Processes the nuScenes dataset and generates the preprocessed dataset used by the training pipeline.
 
 The generated dataset is saved according to:
 
+```python
 PREPROCESSED_SAVE_PATH
+```
 
-in 'config.py'.
+in `config.py`.
 
 Run this first when setting up the project or when regenerating the preprocessed dataset.
 
 ---
 
-### 2. train.py
+### 2. `train.py`
 
 Trains the trajectory-prediction models using the preprocessed dataset.
 
@@ -56,25 +58,25 @@ The script saves:
 * Best model checkpoints
 * Training metrics
 
-to the locations specified in 'config.py'.
+to the locations specified in `config.py`.
 
 Individual models can be commented out in the training script when only a specific model needs to be trained.
 
 ---
 
-### 3. benchmarking.py
+### 3. `benchmarking.py`
 
 Evaluates and benchmarks the trained models.
 
-This script does not require model training and can therefore be run independently after trained model checkpoints are available.
+This script does **not require model training** and can therefore be run independently after trained model checkpoints are available.
 
-If the models have already been trained, this script can be used instead of 'train.py' as the next stage of the workflow.
+If the models have already been trained, this script can be used instead of `train.py` as the next stage of the workflow.
 
 ---
 
-### 4. create_training_plots.py
+### 4. `create_training_plots.py`
 
-Generates visualizations from the training metrics produced by 'train.py'.
+Generates visualizations from the training metrics produced by `train.py`.
 
 The script generates:
 
@@ -91,11 +93,11 @@ These include metrics such as:
 * Collision rate
 * Per-horizon prediction error
 
-The output locations are controlled by the paths defined in 'config.py'.
+The output locations are controlled by the paths defined in `config.py`.
 
 ---
 
-### 5. create_trajectory_plots.py
+### 5. `create_trajectory_plots.py`
 
 Generates trajectory-prediction visualizations for the trained models.
 
@@ -109,14 +111,16 @@ The generated results include:
 
 Trajectory plots and their corresponding evaluation CSV files are saved according to:
 
+```python
 TRAJECTORY_PLOT_PATH
 TRAJECTORY_CSV_PATH
+```
 
-defined in 'config.py'.
+defined in `config.py`.
 
 ---
 
-### 6. pertuberation_analysis.py
+### 6. `pertuberation_analysis.py`
 
 Performs perturbation-based robustness analysis of the trained trajectory-prediction models.
 
@@ -124,10 +128,12 @@ The script evaluates model behavior under controlled perturbations and generates
 
 Output locations are controlled by:
 
+```python
 ROBUSTNESS_PATH
 ROBUSTNESS_METRICS_PATH
+```
 
-in 'config.py'.
+in `config.py`.
 
 ---
 
@@ -135,7 +141,7 @@ in 'config.py'.
 
 The remaining files provide functionality used by the main pipeline scripts and are generally not intended to be executed independently.
 
-### config.py
+### `config.py`
 
 Contains project-wide configuration values, including:
 
@@ -149,23 +155,25 @@ Contains project-wide configuration values, including:
 * Dataset parameters
 * Training/model parameters
 
-Paths are constructed relative to the project root using 'ROOT_PATH'.
+Paths are constructed relative to the project root using `ROOT_PATH`.
 
 ---
 
-### load_nuscenes.py
+### `load_nuscenes.py`
 
-Contains the dataset-loading functionality used to load the raw nuScenes data for preprocessing and the preprocessed nuScenes data for training and evaluation.
+Contains the dataset-loading functionality used to load the preprocessed nuScenes data for training and evaluation.
 
 ---
 
-### training_models.py
+### `training_models.py`
 
 Contains the trajectory-prediction model architectures used by the project.
 
+The implementations correspond to the models defined in the project configuration.
+
 ---
 
-### utils.py
+### `utils.py`
 
 Contains reusable utility functions used throughout the pipeline, including functionality for:
 
@@ -183,13 +191,24 @@ Contains reusable utility functions used throughout the pipeline, including func
 
 For a fresh setup, run:
 
-
+```text
 1. preprocessing.py
+        │
+        ▼
 2. train.py
+        │
+        ▼
 3. benchmarking.py
+        │
+        ▼
 4. create_training_plots.py
+        │
+        ▼
 5. create_trajectory_plots.py
+        │
+        ▼
 6. pertuberation_analysis.py
+```
 
 Training plots require the training metrics generated during training, so the corresponding metric files must already exist.
 
@@ -201,12 +220,15 @@ Trajectory plots, benchmarking, and perturbation analysis require the trained mo
 
 The scripts share project-wide configuration through:
 
+```text
 config.py
+```
 
-The project root is automatically determined from the location of 'config.py', allowing the repository to be moved to another machine without modifying hard-coded absolute paths.
+The project root is automatically determined from the location of `config.py`, allowing the repository to be moved to another machine without modifying hard-coded absolute paths.
 
 Important configuration categories include:
 
+```text
 Dataset
 ├── DATAROOT
 └── VERSION
@@ -230,8 +252,9 @@ Trajectory Evaluation
 Robustness Analysis
 ├── ROBUSTNESS_PATH
 └── ROBUSTNESS_METRICS_PATH
+```
 
-Refer to 'config.py' before running the pipeline if the dataset location or output locations need to be changed.
+Refer to `config.py` before running the pipeline if the dataset location or output locations need to be changed.
 
 ---
 
