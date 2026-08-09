@@ -39,10 +39,6 @@ def compute_FDE(pred, gt):
         pred[-1] - gt[-1]
     )
 
-# ============================================================
-# CREATE OUTPUT DIRECTORIES
-# ============================================================
-
 os.makedirs(
     TRAJECTORY_PLOT_PATH,
     exist_ok=True
@@ -53,9 +49,7 @@ os.makedirs(
     exist_ok=True
 )
 
-# ============================================================
-# LOAD DATASET
-# ============================================================
+# ================= LOAD DATASETS =================
 
 dataset = NuScenesDataset(
     PREPROCESSED_SAVE_PATH,
@@ -67,33 +61,19 @@ num_samples = min(
     len(dataset)
 )
 
-# ============================================================
-# LOAD MODELS
-# ============================================================
+# ================= LOAD MODELS =================
 
 models = {}
 
 for model_name, model_config in MODELS_CONFIG.items():
 
-    # --------------------------------------------------------
-    # Get model class
-    # --------------------------------------------------------
-
     model_class = MODEL_CLASSES[
         model_name
     ]
 
-    # --------------------------------------------------------
-    # Create model
-    # --------------------------------------------------------
-
     model = model_class(
         hidden_dim=HIDDEN_DIM
     )
-
-    # --------------------------------------------------------
-    # Get model path from MODELS_CONFIG
-    # --------------------------------------------------------
 
     model_path = os.path.join(
         MODELS_PATH,
@@ -103,10 +83,6 @@ for model_name, model_config in MODELS_CONFIG.items():
     display_name = model_config[
         "display_name"
     ]
-
-    # --------------------------------------------------------
-    # Check model file
-    # --------------------------------------------------------
 
     if not os.path.exists(
         model_path
@@ -122,10 +98,6 @@ for model_name, model_config in MODELS_CONFIG.items():
         )
 
         continue
-
-    # --------------------------------------------------------
-    # Load weights
-    # --------------------------------------------------------
 
     model.load_state_dict(
         torch.load(
@@ -149,9 +121,7 @@ for model_name, model_config in MODELS_CONFIG.items():
     )
 
 
-# ============================================================
-# EVALUATE EACH MODEL
-# ============================================================
+# ================= EVALUATE MODELS =================
 
 for model_name, model in models.items():
 
@@ -163,10 +133,6 @@ for model_name, model in models.items():
         "display_name"
     ]
 
-    # --------------------------------------------------------
-    # Create model-specific output directories
-    # --------------------------------------------------------
-
     model_plot_path = os.path.join(
         TRAJECTORY_PLOT_PATH,
         model_name
@@ -177,10 +143,6 @@ for model_name, model in models.items():
         exist_ok=True
     )
 
-    # --------------------------------------------------------
-    # Model-specific CSV
-    # --------------------------------------------------------
-
     csv_filename = (
         f"{model_name}_trajectory_metrics.csv"
     )
@@ -190,10 +152,6 @@ for model_name, model in models.items():
         csv_filename
     )
 
-    # --------------------------------------------------------
-    # Store this model's metrics
-    # --------------------------------------------------------
-
     rows = []
 
     print("\n======================================")
@@ -201,10 +159,6 @@ for model_name, model in models.items():
         f"Evaluating: {display_name}"
     )
     print("======================================")
-
-    # ========================================================
-    # LOOP THROUGH DATASET
-    # ========================================================
 
     for idx in range(
         num_samples
@@ -215,10 +169,6 @@ for model_name, model in models.items():
             f"{idx + 1}/{num_samples}",
             end=""
         )
-
-        # ----------------------------------------------------
-        # Load sample
-        # ----------------------------------------------------
 
         ego, nbr, lane, gt = dataset[
             idx
@@ -237,10 +187,6 @@ for model_name, model in models.items():
         ).to(DEVICE)
 
         gt = gt.numpy()
-
-        # ----------------------------------------------------
-        # Generate prediction
-        # ----------------------------------------------------
 
         with torch.no_grad():
 
@@ -268,10 +214,6 @@ for model_name, model in models.items():
                 0
             ].cpu().numpy()
 
-        # ----------------------------------------------------
-        # Calculate ADE / FDE
-        # ----------------------------------------------------
-
         ade = compute_ADE(
             pred,
             gt
@@ -282,19 +224,11 @@ for model_name, model in models.items():
             gt
         )
 
-        # ----------------------------------------------------
-        # Store metrics
-        # ----------------------------------------------------
-
         rows.append({
             "idx": idx,
             "ADE": ade,
             "FDE": fde
         })
-
-        # ----------------------------------------------------
-        # Ego history
-        # ----------------------------------------------------
 
         ego_hist = ego.numpy()
 
@@ -308,15 +242,9 @@ for model_name, model in models.items():
             1
         ]
 
-        # ----------------------------------------------------
-        # Create trajectory plot
-        # ----------------------------------------------------
-
         plt.figure(
             figsize=(10, 8)
         )
-
-        # Ego history
 
         plt.plot(
             ego_x,
@@ -325,8 +253,6 @@ for model_name, model in models.items():
             label="Ego History"
         )
 
-        # Ground truth
-
         plt.plot(
             gt[:, 0],
             gt[:, 1],
@@ -334,8 +260,6 @@ for model_name, model in models.items():
             linewidth=2,
             label="Ground Truth"
         )
-
-        # Model prediction
 
         plt.plot(
             pred[:, 0],
@@ -373,10 +297,6 @@ for model_name, model in models.items():
 
         plt.tight_layout()
 
-        # ----------------------------------------------------
-        # Save trajectory
-        # ----------------------------------------------------
-
         save_path = os.path.join(
             model_plot_path,
             f"traj_{idx:03d}.png"
@@ -391,10 +311,6 @@ for model_name, model in models.items():
         plt.close()
 
     print()
-
-    # ========================================================
-    # SAVE MODEL CSV
-    # ========================================================
 
     with open(
         csv_path,
@@ -417,10 +333,6 @@ for model_name, model in models.items():
             rows
         )
 
-    # ========================================================
-    # MODEL SUMMARY
-    # ========================================================
-
     print(
         f"Plots saved to:"
         f"\n{model_plot_path}"
@@ -440,11 +352,6 @@ for model_name, model in models.items():
         f"Mean FDE: "
         f"{np.mean([row['FDE'] for row in rows]):.4f}"
     )
-
-
-# ============================================================
-# FINAL SUMMARY
-# ============================================================
 
 print("\n======================================")
 print("TRAJECTORY EVALUATION COMPLETE")

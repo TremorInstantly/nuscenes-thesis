@@ -31,9 +31,7 @@ from utils import (
 )
 
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
+# ================= CONFIGURATION =================
 
 DEVICE = (
     "cuda"
@@ -61,11 +59,6 @@ MODEL_CLASSES = {
         Model5_GatedTopK,
 }
 
-
-# ============================================================
-# CREATE OUTPUT DIRECTORIES
-# ============================================================
-
 os.makedirs(
     ROBUSTNESS_PATH,
     exist_ok=True
@@ -77,9 +70,7 @@ os.makedirs(
 )
 
 
-# ============================================================
-# LOAD DATASET
-# ============================================================
+# ================= LOAD DATASET AND MODELS =================
 
 dataset = NuScenesDataset(
     PREPROCESSED_SAVE_PATH,
@@ -95,11 +86,6 @@ loader = DataLoader(
     batch_size=BATCH_SIZE,
     shuffle=False
 )
-
-
-# ============================================================
-# LOAD MODELS
-# ============================================================
 
 models = {}
 
@@ -118,10 +104,6 @@ for model_name, model_config in MODELS_CONFIG.items():
         model_config["model_file"]
     )
 
-    # --------------------------------------------------------
-    # Check model file
-    # --------------------------------------------------------
-
     if not os.path.exists(
         model_path
     ):
@@ -137,17 +119,9 @@ for model_name, model_config in MODELS_CONFIG.items():
 
         continue
 
-    # --------------------------------------------------------
-    # Create model
-    # --------------------------------------------------------
-
     model = model_class(
         hidden_dim=HIDDEN_DIM
     )
-
-    # --------------------------------------------------------
-    # Load trained weights
-    # --------------------------------------------------------
 
     model.load_state_dict(
         torch.load(
@@ -170,10 +144,7 @@ for model_name, model_config in MODELS_CONFIG.items():
         f"Loaded: {display_name}"
     )
 
-
-# ============================================================
-# METRICS
-# ============================================================
+# ================= METRICS AND EVALUATION =================
 
 def compute_ADE(
     pred,
@@ -200,11 +171,6 @@ def compute_FDE(
             dim=-1
         )
     ).item()
-
-
-# ============================================================
-# EVALUATION
-# ============================================================
 
 def evaluate_model(
     model,
@@ -245,10 +211,6 @@ def evaluate_model(
                 DEVICE
             )
 
-            # =================================================
-            # PERTURBATION
-            # =================================================
-
             if test_type == "zero_neighbor":
 
                 nbr = torch.zeros_like(
@@ -287,10 +249,6 @@ def evaluate_model(
                     :, :, :2
                 ] += noise
 
-            # =================================================
-            # FORWARD PASS
-            # =================================================
-
             output = model(
                 ego,
                 nbr,
@@ -307,10 +265,6 @@ def evaluate_model(
             else:
 
                 pred = output
-
-            # =================================================
-            # METRICS
-            # =================================================
 
             ade_total += compute_ADE(
                 pred,
@@ -352,11 +306,6 @@ def evaluate_model(
             collision_total / count,
     }
 
-
-# ============================================================
-# RELATIVE DEGRADATION
-# ============================================================
-
 def relative_degradation(
     original,
     tested
@@ -370,11 +319,6 @@ def relative_degradation(
             original + 1e-6
         )
     ) * 100.0
-
-
-# ============================================================
-# SAVE METRICS
-# ============================================================
 
 def save_metrics_txt(
     path,
@@ -445,11 +389,6 @@ def save_metrics_txt(
                     f"{degradation:.2f}%\n\n"
                 )
 
-
-# ============================================================
-# BAR + LINE PLOT
-# ============================================================
-
 def plot_bar_line(
     metric_name,
     baseline,
@@ -493,21 +432,12 @@ def plot_bar_line(
     LEGEND_SIZE = 15
     TEXT_SIZE = 15
 
-    # --------------------------------------------------------
-    # Baseline
-    # --------------------------------------------------------
-
     plt.bar(
         x,
         baseline_values,
         width=0.5,
         label="Original"
     )
-
-    # --------------------------------------------------------
-    # Tested
-    # --------------------------------------------------------
-
     plt.plot(
         x,
         tested_values,
@@ -518,11 +448,6 @@ def plot_bar_line(
         color="red",
         label="Tested"
     )
-
-    # --------------------------------------------------------
-    # Degradation %
-    # --------------------------------------------------------
-
     max_tested = max(
         tested_values
     )
@@ -553,10 +478,6 @@ def plot_bar_line(
             ha="center",
             va="bottom"
         )
-
-    # --------------------------------------------------------
-    # Axes
-    # --------------------------------------------------------
 
     plt.xticks(
         x,
@@ -596,11 +517,6 @@ def plot_bar_line(
 
     plt.close()
 
-
-# ============================================================
-# NOISE CURVE
-# ============================================================
-
 def plot_noise_curve(
     all_results,
     metric_name,
@@ -616,10 +532,6 @@ def plot_noise_curve(
     LABEL_SIZE = 15
     TICK_SIZE = 15
     LEGEND_SIZE = 15
-
-    # --------------------------------------------------------
-    # Plot every model
-    # --------------------------------------------------------
 
     for model_name in all_results:
 
@@ -647,10 +559,6 @@ def plot_noise_curve(
             linewidth=3,
             label=display_name
         )
-
-    # --------------------------------------------------------
-    # Axes
-    # --------------------------------------------------------
 
     plt.xlabel(
         "Noise Standard Deviation",
@@ -694,11 +602,6 @@ def plot_noise_curve(
 
     plt.close()
 
-
-# ============================================================
-# BASELINE EVALUATION
-# ============================================================
-
 baseline_results = {}
 
 print(
@@ -722,11 +625,6 @@ for model_name, model in models.items():
         loader
     )
 
-
-# ============================================================
-# SINGLE PERTURBATION TEST
-# ============================================================
-
 def run_single_test(
     test_name,
     test_type
@@ -748,10 +646,6 @@ def run_single_test(
         f"\nRunning {test_name}...\n"
     )
 
-    # --------------------------------------------------------
-    # Evaluate every model
-    # --------------------------------------------------------
-
     for model_name, model in models.items():
 
         display_name = MODELS_CONFIG[
@@ -770,10 +664,6 @@ def run_single_test(
             test_type=test_type
         )
 
-    # --------------------------------------------------------
-    # Save metrics
-    # --------------------------------------------------------
-
     save_metrics_txt(
         os.path.join(
             ROBUSTNESS_METRICS_PATH,
@@ -782,10 +672,6 @@ def run_single_test(
         baseline_results,
         tested_results
     )
-
-    # --------------------------------------------------------
-    # Generate comparison plots
-    # --------------------------------------------------------
 
     metrics = [
         "ADE",
@@ -806,11 +692,6 @@ def run_single_test(
             ),
             f"{test_name} - {metric}"
         )
-
-
-# ============================================================
-# NOISE PERTURBATION TEST
-# ============================================================
 
 def run_noise_test(
     test_name,
@@ -833,10 +714,6 @@ def run_noise_test(
 
         for model_name in models
     }
-
-    # --------------------------------------------------------
-    # Evaluate every model at every noise level
-    # --------------------------------------------------------
 
     for noise_level in NOISE_LEVELS:
 
@@ -865,10 +742,6 @@ def run_noise_test(
                     noise_std=noise_level
                 )
             )
-
-    # --------------------------------------------------------
-    # Save metrics
-    # --------------------------------------------------------
 
     metrics_path = os.path.join(
         ROBUSTNESS_METRICS_PATH,
@@ -939,10 +812,6 @@ def run_noise_test(
                         f"{degradation:.2f}%)\n"
                     )
 
-    # --------------------------------------------------------
-    # Generate noise curves
-    # --------------------------------------------------------
-
     metrics = [
         "ADE",
         "FDE",
@@ -961,11 +830,6 @@ def run_noise_test(
             ),
             f"{test_name} - {metric}"
         )
-
-
-# ============================================================
-# RUN PERTURBATION TESTS
-# ============================================================
 
 run_single_test(
     "Zero Neighbor Test",
@@ -986,11 +850,6 @@ run_noise_test(
     "Ego Robustness Test",
     "ego_noise"
 )
-
-
-# ============================================================
-# COMPLETE
-# ============================================================
 
 print(
     "\n======================================"

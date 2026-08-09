@@ -228,21 +228,15 @@ class Model5_GatedTopK(nn.Module):
 
     def forward(self, ego, neighbors, lanes):
 
-        # -----------------------------
-        # mask valid neighbors
-        # -----------------------------
+        # ================= MASK VALID NEIGHBORS =================
         mask = get_neighbor_mask(neighbors)  # (B, K)
 
-        # -----------------------------
-        # encode trajectories
-        # -----------------------------
+        # ================= ENCODE TRAJECTORIES =================
         h_ego, ego_seq, h_nbr, h_lane = self.encoder(ego, neighbors, lanes)
 
         B, K, H = h_nbr.shape
 
-        # =========================================================
-        # 1. PHYSICS FEATURES
-        # =========================================================
+        # ================= PHYSICS FEATURES =================
         ego_xy = ego[:, -1, :2]
         nbr_xy = neighbors[:, :, -1, :2]
 
@@ -258,23 +252,17 @@ class Model5_GatedTopK(nn.Module):
 
         physics = torch.stack([dist, vel_diff, yaw_diff], dim=-1)  # (B, K, 3)
 
-        # =========================================================
-        # 2. LEARNED INTERACTION SCORE (GATING)
-        # =========================================================
+        # ================= LEARNED INTERACTION SCORE (GATING) =================
         h_ego_exp = h_ego.unsqueeze(1).expand(-1, K, -1)
 
         mlp_input = torch.cat([h_ego_exp, h_nbr, physics], dim=-1)
         learn_score = self.score_mlp(mlp_input).squeeze(-1)
 
-        # combine implicit + physics bias (important!)
         score = learn_score
 
-        # mask invalid neighbors
         score = score.masked_fill(~mask, -1e9)
 
-        # =========================================================
-        # 3. TOP-K SELECTION (STRUCTURAL SPARSITY)
-        # =========================================================
+        # ================= TOP-K SELECTION (STRUCTURAL SPARSITY) =================
         topk_vals, topk_idx = torch.topk(score, self.K, dim=1)
 
         # build binary mask
@@ -287,30 +275,21 @@ class Model5_GatedTopK(nn.Module):
         # normalize for stability
         gates = gates / (gates.sum(dim=1, keepdim=True) + 1e-6)
 
-        # =========================================================
-        # 4. NEIGHBOR AGGREGATION
-        # =========================================================
+        # ================= NEIGHBOR AGGREGATION =================
         h_nbr_agg = torch.sum(h_nbr * gates.unsqueeze(-1), dim=1)
 
-        # =========================================================
-        # 5. LANE AGGREGATION
-        # =========================================================
+        # ================= LANE AGGREGATION =================
         lane_scores = self.lane_fc(h_lane).squeeze(-1)
         lane_weights = F.softmax(lane_scores, dim=1)
         h_lane_agg = torch.sum(h_lane * lane_weights.unsqueeze(-1), dim=1)
 
-        # =========================================================
-        # 6. TEMPORAL ENCODING (ego motion)
-        # =========================================================
+        # ================= TEMPORAL ENCODING =================
         h_temporal = torch.mean(ego_seq, dim=1)
         h_ego_enhanced = h_ego + h_temporal
 
-        # =========================================================
-        # 7. FINAL FUSION
-        # =========================================================
+        # ================= FINAL FUSION =================
         z = torch.cat([h_ego_enhanced, h_nbr_agg, h_lane_agg], dim=-1)
-
-        # residual stabilization (important for training stability)
+        
         z = z + torch.cat([h_ego, h_ego, h_ego], dim=-1)
 
         pred = self.decoder(z)

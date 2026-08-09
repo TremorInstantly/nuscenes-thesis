@@ -10,9 +10,7 @@ from config import (
 
 from utils import load_training_metrics
 
-# ============================================================
-# STANDALONE PLOTS
-# ============================================================
+# ================= STANDALONE PLOTS =================
 
 def plot_losses(
     metrics,
@@ -298,9 +296,7 @@ def plot_horizon_errors(
     plt.close()
 
 
-# ============================================================
-# COMBINED PLOTS
-# ============================================================
+# ================= COMBINED PLOTS =================
 
 def plot_combined_metric(
     all_metrics,
@@ -418,15 +414,9 @@ def plot_combined_horizon_errors(
     plt.close()
 
 
-# ============================================================
-# MAIN
-# ============================================================
+# ================= MAIN =================
 
 if __name__ == "__main__":
-
-    # ========================================================
-    # CREATE ROOT DIRECTORIES
-    # ========================================================
 
     os.makedirs(
         TRAINING_PLOTS_PATH,
@@ -443,9 +433,7 @@ if __name__ == "__main__":
         exist_ok=True
     )
 
-    # ========================================================
-    # LOAD ALL MODEL METRICS
-    # ========================================================
+    # ================= Load Model Metrics =================
 
     all_metrics = {}
 
@@ -464,10 +452,6 @@ if __name__ == "__main__":
             "display_name"
         ]
 
-        # ----------------------------------------------------
-        # Check metrics file
-        # ----------------------------------------------------
-
         if not os.path.exists(
             metrics_path
         ):
@@ -483,10 +467,6 @@ if __name__ == "__main__":
 
             continue
 
-        # ----------------------------------------------------
-        # Load metrics
-        # ----------------------------------------------------
-
         all_metrics[
             model_name
         ] = load_training_metrics(
@@ -498,9 +478,7 @@ if __name__ == "__main__":
             f"{display_name}"
         )
 
-    # ========================================================
-    # STANDALONE MODEL PLOTS
-    # ========================================================
+    # ================= STANDALONE =================
 
     print("\n======================================")
     print("GENERATING STANDALONE MODEL PLOTS")
@@ -511,10 +489,6 @@ if __name__ == "__main__":
         display_name = MODEL_CONFIG[
             model_name
         ]["display_name"]
-
-        # ----------------------------------------------------
-        # Model-specific directory
-        # ----------------------------------------------------
 
         save_dir = os.path.join(
             TRAINING_PLOTS_PATH,
@@ -530,10 +504,6 @@ if __name__ == "__main__":
             f"\nGenerating plots: "
             f"{display_name}"
         )
-
-        # ----------------------------------------------------
-        # Generate standalone plots
-        # ----------------------------------------------------
 
         plot_losses(
             metrics,
@@ -581,17 +551,11 @@ if __name__ == "__main__":
             f"Saved to: {save_dir}"
         )
 
-    # ========================================================
-    # COMBINED MODEL PLOTS
-    # ========================================================
+    # ================= COMBINED =================
 
     print("\n======================================")
     print("GENERATING COMBINED MODEL PLOTS")
     print("======================================")
-
-    # --------------------------------------------------------
-    # Validation Loss
-    # --------------------------------------------------------
 
     plot_combined_metric(
         all_metrics,
@@ -602,10 +566,6 @@ if __name__ == "__main__":
         validation=True
     )
 
-    # --------------------------------------------------------
-    # Validation ADE
-    # --------------------------------------------------------
-
     plot_combined_metric(
         all_metrics,
         metric_key="ades",
@@ -614,10 +574,6 @@ if __name__ == "__main__":
         save_name="combined_val_ade.png",
         validation=True
     )
-
-    # --------------------------------------------------------
-    # Validation FDE
-    # --------------------------------------------------------
 
     plot_combined_metric(
         all_metrics,
@@ -628,10 +584,6 @@ if __name__ == "__main__":
         validation=True
     )
 
-    # --------------------------------------------------------
-    # Gradient Norm
-    # --------------------------------------------------------
-
     plot_combined_metric(
         all_metrics,
         metric_key="grad_norms",
@@ -639,10 +591,6 @@ if __name__ == "__main__":
         title="Gradient Norm Comparison",
         save_name="combined_grad_norms.png"
     )
-
-    # --------------------------------------------------------
-    # Smoothness
-    # --------------------------------------------------------
 
     plot_combined_metric(
         all_metrics,
@@ -652,10 +600,6 @@ if __name__ == "__main__":
         save_name="combined_smoothness.png"
     )
 
-    # --------------------------------------------------------
-    # Collision Rate
-    # --------------------------------------------------------
-
     plot_combined_metric(
         all_metrics,
         metric_key="collision_rates",
@@ -664,17 +608,9 @@ if __name__ == "__main__":
         save_name="combined_collision_rates.png"
     )
 
-    # --------------------------------------------------------
-    # Horizon Errors
-    # --------------------------------------------------------
-
     plot_combined_horizon_errors(
         all_metrics
     )
-
-    # ========================================================
-    # FINAL MESSAGE
-    # ========================================================
 
     print("\n======================================")
     print("ALL TRAINING PLOTS GENERATED")

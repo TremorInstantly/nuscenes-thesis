@@ -7,10 +7,9 @@ from torch.utils.data import DataLoader
 from utils import count_parameters
 from load_nuscenes import NuScenesDataset
 from training_models import Model1_EgoOnly, Model2_Attention, Model3_TopK, Model4_Gated, Model5_GatedTopK
+from config import PREPROCESSED_SAVE_PATH, BENCHMARK_PATH
 
-# =========================================================
-# BENCHMARK
-# =========================================================
+# ================= BENCHMARK =================
 
 def benchmark_models(models, loader, device="cpu", warmup=10, runs=5):
 
@@ -26,9 +25,7 @@ def benchmark_models(models, loader, device="cpu", warmup=10, runs=5):
         model.to(device)
         model.eval()
 
-        # -----------------------------
-        # Warmup
-        # -----------------------------
+        # ----------------- Warmups -----------------
         with torch.no_grad():
 
             for i, (ego, nbr, lane, gt) in enumerate(loader):
@@ -42,9 +39,7 @@ def benchmark_models(models, loader, device="cpu", warmup=10, runs=5):
 
                 _ = model(ego, nbr, lane)
 
-        # -----------------------------
-        # Timed runs
-        # -----------------------------
+        # ----------------- Timed Runs -----------------
         batch_times = []
 
         for r in range(runs):
@@ -93,16 +88,14 @@ def benchmark_models(models, loader, device="cpu", warmup=10, runs=5):
 
     return pd.DataFrame(results)
 
-# =========================================================
-# MAIN
-# =========================================================
+# ================= MAIN =================
 
 if __name__ == "__main__":
 
     device = "cpu"
 
     dataset = NuScenesDataset(
-        "nuscenes_full_preprocessed_final.npz"
+        PREPROCESSED_SAVE_PATH
     )
 
     train_size = int(0.8 * len(dataset))
@@ -141,7 +134,7 @@ if __name__ == "__main__":
     print(results_df)
     print("======================================")
 
-    csv_path = "benchmark_results_all_models.csv"
+    csv_path = BENCHMARK_PATH/"benchmark_results_all_models.csv"
 
     results_df.to_csv(csv_path, index=False)
 

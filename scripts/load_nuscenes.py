@@ -5,8 +5,9 @@ from nuscenes.map_expansion.map_api import NuScenesMap
 from config import DATAROOT, VERSION
 from torch.utils.data import Dataset
 
-# ================= LOAD =================
-nusc = NuScenes(version=VERSION, dataroot=DATAROOT, verbose=False) # Load raw nuscenes dataset from local storage
+# ================= LOAD RAW NUSCENES DATASET AND MAP =================
+
+nusc = NuScenes(version=VERSION, dataroot=DATAROOT, verbose=False)
 
 MAPS = {
     name: NuScenesMap(dataroot=DATAROOT, map_name=name)
@@ -18,7 +19,9 @@ MAPS = {
     ]
 }
 
-class NuScenesDataset(Dataset): # To Load preprocessed dataset for training
+# ================= LOAD PREPROCESSED DATASET =================
+
+class NuScenesDataset(Dataset):
     def __init__(self, path):
         data = np.load(path, allow_pickle=True)
 

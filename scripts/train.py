@@ -39,9 +39,6 @@ def train(model, train_loader, val_loader, model_name, model_save_path, epochs=5
     patience = 15
     counter = 0
     
-    # =========================
-    # TIME TRACKING
-    # =========================
     start_time = time.time()
 
     for epoch in range(epochs):
